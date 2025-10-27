@@ -8,6 +8,7 @@ const hpp = require('hpp'); // Prevent HTTP Parameter Pollution
 const rateLimit = require('express-rate-limit'); // Rate limiting
 const session = require('express-session'); // Session management
 const MongoStore = require('connect-mongo'); // MongoDB session store
+const csurf = require('csurf'); // CSRF protection
 require('dotenv').config();
 
 const app = express();
@@ -71,6 +72,24 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// CSRF Protection
+const csrfProtection = csurf();
+app.use(csrfProtection);
+
+// Route to get CSRF token
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+// CSRF error handler
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    res.status(403).json({ message: 'Invalid CSRF token' });
+  } else {
+    next(err);
+  }
+});
 
 
 // ===== Routes =====
