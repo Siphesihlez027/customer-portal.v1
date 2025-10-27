@@ -34,19 +34,6 @@ const sanitizeInput = (input) => {
   return input.trim().replace(/[<>]/g, '');
 };
 
-// Generate JWT Token
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      userId: user._id,
-      username: user.username,
-      type: 'customer' // You can make this dynamic if you add roles later
-    },
-    process.env.JWT_SECRET, // Keep secret key in .env
-    { expiresIn: '7d' } // Token valid for 7 days
-  );
-};
-
 /* ==========================
    Signup Route
    ========================== */
@@ -111,8 +98,13 @@ router.post('/signup', async (req, res) => {
 
     await user.save();
 
-    // Generate JWT token
-    const token = generateToken(user);
+    // Store user in session
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      type: 'customer'
+    };
+
 
     // Return response
     res.status(201).json({
@@ -122,8 +114,7 @@ router.post('/signup', async (req, res) => {
         fullName: user.fullName,
         username: user.username,
         accountNumber: user.accountNumber
-      },
-      token: token
+      }
     });
 
   } catch (error) {
@@ -187,8 +178,12 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate JWT token
-    const token = generateToken(user);
+    // Store user in session
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      type: 'customer'
+    };
 
     // Return response
     res.json({
@@ -198,8 +193,7 @@ router.post('/login', async (req, res) => {
         fullName: user.fullName,
         username: user.username,
         accountNumber: user.accountNumber
-      },
-      token: token
+      }
     });
 
   } catch (error) {
