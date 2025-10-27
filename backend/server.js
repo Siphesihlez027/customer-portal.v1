@@ -98,7 +98,10 @@ app.use('/api/employee/auth', require('./routes/employeeAuth'));
 app.use('/api/payments', require('./routes/payments'));
 
 // ===== MongoDB Connection =====
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
