@@ -6,6 +6,8 @@ const cors = require('cors');
 const helmet = require('helmet'); // Security headers
 const hpp = require('hpp'); // Prevent HTTP Parameter Pollution
 const rateLimit = require('express-rate-limit'); // Rate limiting
+const session = require('express-session'); // Session management
+const MongoStore = require('connect-mongo'); // MongoDB session store
 require('dotenv').config();
 
 const app = express();
@@ -41,6 +43,25 @@ app.use('/api', limiter); // Apply limiter to all API routes
 
 
 // ===== Core Middleware =====
+
+// Session management
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_strong_session_secret',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
+  cookie: {
+    secure: true, // only send over HTTPS
+    httpOnly: true, // prevent client-side JS access
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    sameSite: 'strict' // prevent CSRF
+  }
+}));
+
 app.use(express.json());
 
 // CORS configuration
